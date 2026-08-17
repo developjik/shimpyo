@@ -31,10 +31,10 @@ export const RULES = {
   npFund:{label:"정부 공식 2071 (수익률 5.5%)", toggles:[2064,2065,2073]}
 };
 
-const fmtW = n => Math.round(n).toLocaleString('ko-KR');            // 원
-const fmtM = n => (n/10000).toLocaleString('ko-KR',{maximumFractionDigits:0});   // 만원
-const fmtE = n => (n/100000000).toLocaleString('ko-KR',{maximumFractionDigits:2}); // 억
-const pct = (n,d=1) => (n*100).toFixed(d)+"%";
+export const fmtW = n => Math.round(n).toLocaleString('ko-KR');            // 원
+export const fmtM = n => (n/10000).toLocaleString('ko-KR',{maximumFractionDigits:0});   // 만원
+export const fmtE = n => (n/100000000).toLocaleString('ko-KR',{maximumFractionDigits:2}); // 억
+export const pct = (n,d=1) => (n*100).toFixed(d)+"%";
 /* ---------- 엔진: 소득세(금종과세) ---------- */
 export function finTax(gross){
   const T = RULES.tax;
