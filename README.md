@@ -1,5 +1,7 @@
 # 쉼표 (shimpyo) — 배포 가이드
 
+**라이브**: https://developjik.github.io/shimpyo/ · repo: https://github.com/developjik/shimpyo · 배포일 2026-08-17
+
 Phase 2 산출. GitHub Pages 정적 배포 + ECOS 월간 자동갱신 + 골든 케이스 배포 차단까지 전부 준비된 상태.
 
 ## 파일 구성
@@ -24,14 +26,14 @@ shimpyo/
 
 ## 배포 절차 (사용자가 직접 할 일 3가지)
 
-1. **도메인 등록** — shimpyo.kr (주력) + shimpyo.dev (방어). 2026-08-17 rdap 실측 전부 미등록 상태였음. .kr은 후이즈/가비아 등에서 등록.
-2. **저장소 생성** — GitHub에서 새 repo 생성 후 이 폴더 전체를 푸시. (developjik 계정, main 브랜치 루트 배포 — 고래지도와 동일 패턴)
-3. **ECOS 키 발급** — https://ecos.bok.or.kr 오픈API 신청(무료) → repo Settings → Secrets → Actions에 `ECOS_KEY` 등록.
+1. ~~**도메인 등록**~~ → **남음**: shimpyo.kr (주력) + shimpyo.dev (방어). 등록 후 Settings → Pages → Custom domain 입력하면 DNS 안내가 나옴. (2026-08-17 rdap 실측 전부 미등록 상태였음)
+2. ~~**저장소 생성·푸시**~~ → **완료** (2026-08-17, gh CLI + device auth)
+3. **ECOS 키 발급** → 남음: https://ecos.bok.or.kr 오픈API 신청(무료) → repo Settings → Secrets and variables → Actions → `ECOS_KEY` 등록. 등록 전까지 워크플로는 골든 케이스만 돌고 데이터 수집을 건너뛰도록 설계됨.
 
 그다음은 자동:
-- Settings → Pages → main 루트 지정 → https://developjik.github.io/{repo} 로 배포
-- 도메인 연결: Pages → Custom domain에 shimpyo.kr 입력, DNS A/CNAME 레코드 안내대로 세팅
-- Actions가 매월 5일 06:00 KST에 ECOS를 받아 회귀 테스트 → 전부 PASS일 때만 커밋/배포
+- ~~Settings → Pages → main 루트 지정~~ → **완료** (API로 활성화, HTTPS 강제 적용됨) — https://developjik.github.io/shimpyo/
+- 도메인 연결 시: Pages → Custom domain에 shimpyo.kr 입력, DNS A/CNAME 레코드 안내대로 세팅, HTTPS 대기 후 Enforce
+- Actions가 매월 5일 06:00 KST에 ECOS를 받아 회귀 테스트 → 전부 PASS일 때만 커밋/배포 (ECOS 키 등록 후 활성화)
 
 ## 유지보수 캘린더 (죽음 테스트)
 
