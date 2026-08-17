@@ -1,27 +1,37 @@
 # 쉼표 (shimpyo) — 배포 가이드
 
-**라이브**: https://developjik.github.io/shimpyo/ · repo: https://github.com/developjik/shimpyo · 배포일 2026-08-17
+**라이브**: https://developjik.github.io/shimpyo/ · repo: https://github.com/developjik/shimpyo · 배포일 2026-08-17 (Seed Design 리뉴얼 v1.0)
+
+## 프레임워크 (2026-08-17 리뉴얼)
+
+- **Vite 6 + React 19 + TypeScript + 당근 Seed Design** (@seed-design/react 2.3 · css 2.5 · vite-plugin 2.1, Apache-2.0)
+- 계산 엔진은 DOM 없는 순수 모듈 `src/lib/engine.ts` — 앱과 CI 골든 러너가 같은 소스 공유 (복제본 이중관리 없음)
+- 골든 러너: `npm run golden` (Node 내장 --experimental-strip-types, esbuild 불필요)
+- 테마: 시스템/라이트/다크 3단 토글 (data-seed-color-mode, localStorage shimpyo.theme)
+- L0 문서 4편(public/)은 Seed 라이트 팔레트에 맞춰 리스타일
+
+**주의 (운영)**: Pages는 Fastly 캐시(TTL ~10분)를 앞에 두고 있어 배포 직후 구 index.html이 보일 수 있음 — 구 JS 해시 404는 이 캐시 때문. 10분 후 재확인할 것.
 
 Phase 2 산출. GitHub Pages 정적 배포 + ECOS 월간 자동갱신 + 골든 케이스 배포 차단까지 전부 준비된 상태.
 
 ## 파일 구성
 
 ```
-shimpyo/
-├── index.html                  앱 (6뷰: 시뮬레이터/백테스트/또래 밴드/근거/검증/방법론)
-├── myeoneok.html               L0 문서 1 — 몇억이면 되나 (SEO 랜딩)
-├── four-percent.html           L0 문서 2 — 4% 룰 한국 데이터
-├── hi-bomb.html                L0 문서 3 — 건보료 폭탄 완전 정리
-├── report-0.html               발표 #0 — 또래 밴드 리포트 (가계금융복지조사 2025)
+shimpyo/ (Vite 루트)
+├── index.html               Vite 엔트리 (data-seed 테마 속성 + OG 메타)
+├── src/
+│   ├── main.tsx / App.tsx / store.ts / styles.css
+│   ├── lib/engine.ts        계산 엔진 (DOM 없음 — 앱/CI 공유, 골든 15개)
+│   └── views/               Sim · BT · Band · Rules · Golden · About (6탭)
+├── seed-design/             CLI로 복사된 SEED 스니펫 (내 소스 — 수정 가능)
+├── public/                  L0 문서 4편 + robots.txt + .nojekyll (dist 루트로 복사됨)
 ├── .github/workflows/
-│   └── monthly-data-update.yml 매월 5일 ECOS 갱신 + 회귀 테스트 + 실패 시 배포 차단
-├── scripts/
-│   ├── ecos_update.py          ECOS API 호출 (키 필요)
-│   ├── golden_runner.mjs       CI 골든 케이스 (index.html 로직 직접 로드 — 복제본 아님)
-│   └── update_freshness.mjs    데이터 신선도 기록
-├── supabase/
-│   └── schema.sql              익명 분포 원격 집계 준비물 (insert-only RLS, 신원 0항목)
-└── data/                       (Actions가 생성) ecos_snapshot.json, freshness.json
+│   ├── ci.yml               푸시마다 골든 + 프로덕션 빌드 검증
+│   ├── deploy.yml           골든 통과 → 빌드 → Pages 배포 (Actions 방식)
+│   └── monthly-data-update.yml 매월 5일 ECOS 갱신 + 회귀 + 빌드 + 커밋
+├── scripts/                 ecos_update.py · golden_runner.ts · update_freshness.mjs
+├── supabase/schema.sql      익명 분포 원격 집계 준비물 (insert-only RLS)
+└── data/                    (Actions 생성) ecos_snapshot.json, freshness.json
 ```
 
 ## 배포 절차 (사용자가 직접 할 일 3가지)
