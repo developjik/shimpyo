@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>건강보험료 폭탄 완전 정리 — 퇴사 후 지역가입 계산법 | 쉼표</title>
+<meta name="description" content="세법은 2,000만인데 건보료는 1,000만부터 터진다. 반영율 50% 진실, 1억 공제, 자동차 폐지, 임의계속가입 36개월까지 2026년 현행 규칙으로.">
+<meta property="og:title" content="건강보험료 폭탄 완전 정리">
+<meta property="og:description" content="이자·배당 1,500만이면 세금은 그대로인데 건보료가 연 122만 붙는다. 산식 전체 공개.">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0e11;--panel:#10141a;--line:#1f2630;--txt:#c9d1d9;--dim:#8b949e;--faint:#57606a;--up:#ef4444;--ok:#3fb950;--warn:#d29922;--accent:#e3b341;--mono:'JetBrains Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--mono);line-height:1.65;font-size:15px;padding:24px 16px 60px}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:1.5rem;letter-spacing:-.02em;margin-bottom:6px}
+.sub{color:var(--faint);font-size:.82rem;margin-bottom:28px}
+h2{font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:34px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+p{margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:.85rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:right;white-space:nowrap}
+th{color:var(--dim);font-weight:500;background:#151b23;text-transform:uppercase;font-size:.7rem;letter-spacing:.05em}
+td:first-child,th:first-child{text-align:left}
+.num{font-variant-numeric:tabular-nums}
+.hl{color:var(--accent);font-weight:700}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:#f85149} .dim{color:var(--dim)} .faint{color:var(--faint)}
+.calc{border:1px solid var(--line);background:var(--panel);padding:14px 16px;margin:14px 0;font-size:.85rem}
+.calc .t{color:var(--accent);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+a{color:var(--dim);border-bottom:1px dotted #2a3442;text-decoration:none}
+a:hover{color:var(--accent)}
+.cta{display:inline-block;margin:26px 0;padding:10px 18px;border:1px solid var(--accent);color:var(--accent);font-size:.85rem}
+.note{font-size:.75rem;color:var(--faint);margin-top:8px;line-height:1.6}
+ul{margin:10px 0 10px 18px} li{margin:4px 0;font-size:.9rem}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>건강보험료 폭탄, 2026년 현행 규칙으로 완전 정리</h1>
+<div class="sub">쉼표 · 상수 검증 2026-08-17 · 건강보험법 시행령 제44조 · 복지부 부과체계 개편 문서 기준</div>
+
+<p>은퇴하면 직장가입자에서 지역가입자로 바뀝니다. 이 순간 보험료 산식이 완전히 달라지고, 대부분의 "폭탄"은 이 전환을 미리 계산하지 않은 데서 나옵니다. 가장 흔한 사고는 세법 기준으로 안심하는 것입니다.</p>
+
+<h2>핵심 — 두 개의 임계값이 다르다</h2>
+<div class="calc"><div class="t">세법 vs 건강보험료</div>
+<table>
+<tr><th>항목</th><th>금융소득종합과세</th><th>지역가입 건보료</th></tr>
+<tr><td>발동 기준</td><td class="num">이자+배당 연 2,000만 초과</td><td class="num bad">이자·배당 전액이 소득분에 반영 (100%)</td></tr>
+<tr><td>1,500만 수령 시</td><td class="num ok">원천 15.4%로 종결</td><td class="num warn">월 101,685원 발생 (연 122만)</td></tr>
+<tr><td>4,000만 수령 시</td><td class="num">종합과세 개시</td><td class="num bad">월 271,159원 (연 325만)</td></tr>
+</table>
+</div>
+<p>즉 세금이 한 푼도 늘지 않는 구간에서 보험료는 이미 올라갑니다. "2,000만까지는 안전"은 세법 이야기만입니다.</p>
+
+<h2>현행 산식 (2022.9 개편 이후)</h2>
+<div class="calc"><div class="t">월 건보료 = 소득분 + 재산분 (+ 0원)</div>
+<table>
+<tr><th>구성</th><th>계산</th><th>비고</th></tr>
+<tr><td>소득분</td><td class="num">(이자·배당·사업·기타 ×1.0 + 근로·공적연금 ×0.5) ÷ 12 × 7.19%</td><td>정률제. 이자·배당은 전액 반영</td></tr>
+<tr><td>재산분</td><td class="num">(재산세과표 + 전월세보증금×30% − 1억) → 점수 × 211.5원</td><td>기본공제 일괄 1억 (2024.2~)</td></tr>
+<tr><td>자동차분</td><td class="num ok">0원</td><td>2024.2 전면 폐지</td></tr>
+<tr><td>장기요양</td><td class="num">건보료 × 13.14%</td><td>2026년 요율</td></tr>
+<tr><td>하한/상한</td><td class="num">20,160원 ~ 4,591,740원</td><td>월액 기준 2026 고시</td></tr>
+</table>
+</div>
+
+<h2>30% vs 50% — 인터넷 정보가 갈리는 이유</h2>
+<p>"근로·연금소득 30% 반영"이라는 글을 많이 보셨을 겁니다. 건보공단 홈페이지 페이지 자체에 지금도 그렇게 남아 있습니다. 그 페이지의 갱신일은 2020년 1월 1일입니다. 실제 규칙은 2022년 9월 1일 2단계 개편으로 <b>50%</b>로 올랐고, 소득 산정 방식도 등급 점수제에서 정률제로 바뀌었습니다. 이력은 이렇습니다.</p>
+<table>
+<tr><th>시기</th><th>근로·연금 반영율</th><th>구조</th></tr>
+<tr><td>~2018.6</td><td class="num">20%</td><td>평가소득제</td></tr>
+<tr><td>2018.7~2022.8</td><td class="num">30%</td><td>1단계 개편</td></tr>
+<tr><td class="hl">2022.9~현재</td><td class="num hl">50%</td><td>2단계 · 정률제</td></tr>
+</table>
+<p class="note">같은 이유로 점수당 195.8원(2020년 값, 현행 211.5원), 자동차 부과 잔존 같은 정보도 묵은 페이지에서 온 것입니다. 이 사이트는 이 오염을 실제로 당한 뒤 전량 정정했고, 그 과정을 근거 탭에 공개합니다.</p>
+
+<h2>폭탄을 줄이는 네 가지 (전부 현행 규칙)</h2>
+<ul>
+<li><b>인출을 매도로 옮긴다.</b> 국내 상장주식 소액주주의 장내 매도차익은 건보료 소득에 들어가지 않습니다. 이자·배당 4,000만 수령자의 보험료 연 325만이, 국내주식 매도로 바꾸면 하한 27만으로 떨어집니다.</li>
+<li><b>연금계좌로 받는다.</b> IRP·연금저축 수령액(사적연금)은 건보료 소득이 아닙니다. 국민연금(공적연금)은 50% 반영됩니다. 수령 순서 설계가 보험료 총액을 바꿉니다.</li>
+<li><b>임의계속가입 36개월.</b> 퇴직 후 첫 지역가입 보험료 고지 납부기한 2개월 내 신청하면 퇴직 전 12개월 평균 보수월액 기준 직장가입자 요율을 최대 36개월 유지할 수 있습니다. 소득이 크게 줄드는 전환기에 유리합니다.</li>
+<li><b>반영 시차를 안다.</b> 2026년 보험료에는 2024년 귀속 소득이 반영됩니다(매년 11월 갱신). 퇴직 직후 고지서가 예전 소득 기준으로 나오는 게 이 때문이고, 조정·정산 신청으로 완화됩니다.</li>
+</ul>
+<p class="note">피부양자(배우자 직장가입자의 가족) 요건은 재산과표 5.4억 이하 + 연소득 2,000만 이하 등입니다. 이자·배당도 소득에 들어가므로 배당 포트폴리오는 피부양자 유지와 충돌할 수 있습니다.</p>
+
+<h2>내 숫자 계산</h2>
+<a class="cta" href="./index.html#sim?spend=200&asset=10&dep=1.5">계산기 열기 — 건보료는 시뮬레이터가 자동 계산</a>
+<p class="note">재산분은 시행령 [별표4] 원문 60등급표로 계산합니다(1억 공제 후 등급 lookup × 211.5원). 과표 3억이면 월 123,939원, 9억이면 203,252원. 근거·출처 탭의 모든 상수에 법령·고시 원문 링크가 붙습니다.</p>
+
+</div></body></html>
