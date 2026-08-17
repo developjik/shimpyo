@@ -26,7 +26,7 @@ shimpyo/
 
 ## 배포 절차 (사용자가 직접 할 일 3가지)
 
-1. ~~**도메인 등록**~~ → **남음**: shimpyo.kr (주력) + shimpyo.dev (방어). 등록 후 Settings → Pages → Custom domain 입력하면 DNS 안내가 나옴. (2026-08-17 rdap 실측 전부 미등록 상태였음)
+1. ~~**도메인 등록**~~ → **추후 결정** (2026-08-17): 초기 테스트는 github.io URL로 진행. 커뮤니티 링크 확산·검색 노출이 자리잡으면 그때 shimpyo.kr(+.dev) 등록 후 Custom domain 연결. 나중 연결 시 기존 github.io 주소는 새 도메인로 301 리다이렉트되므로 지금 퍼진 링크는 죽지 않음.
 2. ~~**저장소 생성·푸시**~~ → **완료** (2026-08-17, gh CLI + device auth)
 3. **ECOS 키 발급** → 남음: https://ecos.bok.or.kr 오픈API 신청(무료) → repo Settings → Secrets and variables → Actions → `ECOS_KEY` 등록. 등록 전까지 워크플로는 골든 케이스만 돌고 데이터 수집을 건너뛰도록 설계됨.
 
