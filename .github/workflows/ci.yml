@@ -1,6 +1,6 @@
 name: ci
 
-# 푸시/PR마다 골든 케이스 회귀 테스트 — FAIL이면 빨간 X. 배포 차단의 첫 관문.
+# 푸시/PR마다 골든 케이스 + 프로덕션 빌드 검증
 on:
   push:
     branches: [main]
@@ -10,12 +10,16 @@ permissions:
   contents: read
 
 jobs:
-  golden:
+  golden-and-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Golden case regression
-        run: node scripts/golden_runner.mjs
+          cache: npm
+      - run: npm ci
+      - name: Golden case regression (fail = block)
+        run: npm run golden
+      - name: Production build
+        run: npm run build

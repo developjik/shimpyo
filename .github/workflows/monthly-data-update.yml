@@ -38,7 +38,12 @@ jobs:
 
       - name: Update data freshness
         run: |
-          node scripts/update_freshness.mjs
+          npx tsx scripts/update_freshness.mjs
+
+      - name: Build (verify app compiles with new data)
+        run: |
+          npm ci || npm install --no-audit --no-fund
+          npx vite build
 
       - name: Commit if changed
         run: |

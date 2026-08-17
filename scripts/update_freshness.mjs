@@ -9,10 +9,10 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const html = readFileSync(join(root, "index.html"), "utf8");
+const engine = readFileSync(join(root, "src/lib/engine.ts"), "utf8");
 
-const mVer = html.match(/version:\s*"v[\d.]+"/);
-const mDate = html.match(/verified:\s*"([\d-]+)"/);
+const mVer = engine.match(/version:\s*"v[\d.]+"/);
+const mDate = engine.match(/verified:\s*"([\d-]+)"/);
 
 const out = {
   last_run: new Date().toISOString(),

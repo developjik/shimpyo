@@ -1,0 +1,31 @@
+{
+  "name": "shimpyo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "golden": "node --experimental-strip-types scripts/golden_runner.ts",
+    "seed:compat": "seed-design-cli compat"
+  },
+  "dependencies": {
+    "@karrotmarket/react-monochrome-icon": "^1.25.0",
+    "@seed-design/css": "^2.5.0",
+    "@seed-design/react": "^2.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@seed-design/cli": "^1.6.1",
+    "@seed-design/vite-plugin": "^2.1.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "vite-tsconfig-paths": "^5.1.0"
+  }
+}
