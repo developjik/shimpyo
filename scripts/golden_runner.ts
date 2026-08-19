@@ -1,14 +1,16 @@
 /**
- * golden_runner.ts — 계산 엔진(src/lib/engine.ts)을 직접 임포트해 골든 케이스를 검증.
+ * golden_runner.ts — 계산 엔진을 직접 임포트해 골든 케이스를 검증.
  * 하나라도 FAIL이면 exit 1 (배포 차단). 앱과 CI가 같은 소스를 공유한다.
+ * 2026-08-18: MC 하네스 골든(G16~G20) 추가, 케이스별 허용오차(tol) 지원.
  */
 import { runGolden, RULES, DATA } from "../src/lib/engine.ts";
+import { runGoldenMC } from "../src/lib/mc.ts";
 
-const cases = runGolden();
+const cases = [...(runGolden() as any[]), ...(runGoldenMC() as any[])];
 let fail = 0, pass = 0, defer = 0;
-for (const c of cases as any[]) {
+for (const c of cases) {
   if (c.deferred) { defer++; console.log(`  DEFER  ${c.id} ${c.title}`); continue; }
-  const ok = Math.abs(c.got - c.expect) <= 1;
+  const ok = Math.abs(c.got - c.expect) <= (c.tol ?? 1);
   ok ? pass++ : fail++;
   console.log(`${ok ? "  PASS " : "  FAIL "} ${c.id} ${c.title} → ${c.got} (expect ${c.expect})`);
 }

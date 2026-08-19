@@ -28,7 +28,15 @@ function currentTab(): string {
 export default function App() {
   const [tab, setTab] = useState(currentTab);
   const [theme, setTheme] = useState("system");
+  const [snap, setSnap] = useState<{ version: string; generated: string } | null>(null);
   const { state, set, reset } = useSimState();
+
+  useEffect(() => {
+    fetch("snapshot.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((v) => { if (v?.version) setSnap(v); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const onHash = () => setTab(currentTab());
@@ -81,7 +89,7 @@ export default function App() {
         <footer className="statusbar">
           <span className="ok">●</span>
           <span>rules {RULES.version} · {RULES.verified}</span>
-          <span>미국 98년 · 한국 46년 시계열 임베드</span>
+          <span>{snap ? `데이터 스냅샷 ${snap.version} (리니지 매니페스트 sha256 검증)` : `미국 98년 · 한국 46년 시계열 임베드`}</span>
           <span>입력값은 브라우저에만 저장 · 서버 전송 0건</span>
         </footer>
       </div>

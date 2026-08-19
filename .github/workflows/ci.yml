@@ -1,6 +1,6 @@
 name: ci
 
-# 푸시/PR마다 골든 케이스 + 프로덕션 빌드 검증
+# 푸시/PR마다 스냅샷 리니지 + 골든 케이스 + 프로덕션 빌드 검증
 on:
   push:
     branches: [main]
@@ -19,6 +19,8 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+      - name: Data snapshot lineage check (manifest sha256)
+        run: npm run snapshot:check
       - name: Golden case regression (fail = block)
         run: npm run golden
       - name: Production build

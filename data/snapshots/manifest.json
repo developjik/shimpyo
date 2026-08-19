@@ -1,0 +1,30 @@
+{
+  "version": "2026.08",
+  "generated": "2026-08-19",
+  "hashes": {
+    "us_csv": "ae1ea8734b265d42fc87f86d04054fbd19bf933edc7af02d1ff608aeddad1ed8",
+    "kr_csv": "881b2825776db1e1c76d6d59a4fec84666ad0dada9c3af3baa5970d336e5f8a8",
+    "kr_div": "648db35a7f9c2816b729f6c0c2f00ec5fe0d0a0a1e8ec29da4284fe49364440e",
+    "ecos_snapshot": "b1e100cdf28179a6b3fa21b4014672541a5683e2729ef3a043bf88b8b4e825e3"
+  },
+  "coverage": {
+    "us": {
+      "first": 1928,
+      "last": 2025,
+      "rows": 98
+    },
+    "kr": {
+      "first": 1980,
+      "last": 2025,
+      "rows": 46
+    },
+    "kr_div": "2001-2025 (KR_DIV keys)"
+  },
+  "sources": {
+    "us": "Damodaran/NYU 1928-2025 · FRED 교차검증",
+    "kr": "KOSPI PR(위키 연말종가·재배포 금지로 수익률 변환값만 임베드) · 국고채3Y YTM ECOS · CPI ECOS",
+    "kr_div": "ECOS 1.5.1.2 (전기 현금배당 기준)",
+    "ecos": "BOK ECOS 월간 자동갱신 (매월 5일 06:00 KST Actions)"
+  },
+  "license_notes": "KOSPI 지수 원본 수치 재배포 금지 — 임베드는 수익률(변환값)만. ECOS 출처 표기 조건 준수."
+}

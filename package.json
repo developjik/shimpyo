@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "golden": "node --experimental-strip-types scripts/golden_runner.ts",
-    "seed:compat": "seed-design-cli compat"
+    "seed:compat": "seed-design-cli compat",
+    "snapshot": "node --experimental-strip-types scripts/snapshot_check.ts --write",
+    "snapshot:check": "node --experimental-strip-types scripts/snapshot_check.ts"
   },
   "dependencies": {
     "@karrotmarket/react-monochrome-icon": "^1.25.0",

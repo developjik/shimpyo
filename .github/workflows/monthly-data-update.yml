@@ -1,6 +1,6 @@
 name: monthly-data-update
 
-# ECOS 월간 갱신 + 골든 케이스 회귀 테스트 + 데이터 만료 배지
+# ECOS 월간 갱신 + 스냅샷 리니지 갱신 + 골든 케이스 회귀 + 데이터 만료 배지
 # 실패 시 배포되지 않는다 (죽음 테스트의 기계 부분)
 
 on:
@@ -21,6 +21,11 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
       - name: Fetch ECOS data (skip if no key yet)
         env:
           ECOS_KEY: ${{ secrets.ECOS_KEY }}
@@ -32,18 +37,19 @@ jobs:
             python3 scripts/ecos_update.py --key "$ECOS_KEY" --out data/
           fi
 
+      - run: npm ci
+
+      - name: Update snapshot manifest (data lineage with new ECOS hash)
+        run: npm run snapshot
+
       - name: Golden case regression (fail = block deploy)
-        run: |
-          node scripts/golden_runner.mjs
+        run: npm run golden
 
       - name: Update data freshness
-        run: |
-          npx tsx scripts/update_freshness.mjs
+        run: npx tsx scripts/update_freshness.mjs
 
       - name: Build (verify app compiles with new data)
-        run: |
-          npm ci || npm install --no-audit --no-fund
-          npx vite build
+        run: npx vite build
 
       - name: Commit if changed
         run: |
