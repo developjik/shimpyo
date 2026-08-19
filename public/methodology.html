@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>방법론과 한계 — 몬테카를로·백테스트·데이터 리니지 | 쉼표</title>
+<meta name="description" content="역사 블록 부트스트랩 설계, 표본 경계(미국 98년·한국 46년·30년 창 17개), 시드 고정 결정론, 꼬리 한계 고지, 데이터 출처 티어와 스냅샷 리니지.">
+<meta property="og:title" content="방법론과 한계 — 쉼표의 모든 계산은 어떻게 검증되나">
+<meta property="og:description" content="확실하지 않으면 숫자를 내지 않는다. 블록 부트스트랩·결정론·표본 경계·데이터 리니지 전부 공개.">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffffff;--panel:#f7f8fa;--panel2:#eef1f4;--line:#e3e7eb;--txt:#2c333d;--dim:#6b7684;--faint:#98a1ad;--ok:#2e9e5b;--warn:#b8860b;--accent:#e65200;--mono:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--mono);line-height:1.65;font-size:15px;padding:24px 16px 60px}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:1.5rem;letter-spacing:-.02em;margin-bottom:6px}
+.sub{color:var(--faint);font-size:.82rem;margin-bottom:28px}
+h2{font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:34px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+p{margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:.85rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:right;white-space:nowrap}
+th{color:var(--dim);font-weight:500;background:var(--panel2);text-transform:uppercase;font-size:.7rem;letter-spacing:.05em}
+td:first-child,th:first-child{text-align:left}
+.num{font-variant-numeric:tabular-nums}
+.hl{color:var(--accent);font-weight:700}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:#f85149} .dim{color:var(--dim)} .faint{color:var(--faint)}
+a{color:var(--dim);border-bottom:1px dotted #2a3442;text-decoration:none}
+a:hover{color:var(--accent)}
+.cta{display:inline-block;margin:26px 0;padding:10px 18px;border:1px solid var(--accent);color:var(--accent);font-size:.85rem}
+.note{font-size:.75rem;color:var(--faint);margin-top:8px;line-height:1.6}
+ul{margin:10px 0 10px 18px} li{margin:4px 0;font-size:.9rem}
+pre{background:var(--panel);border:1px solid var(--line);padding:12px;font-size:.78rem;overflow-x:auto;border-radius:4px}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>방법론과 한계</h1>
+<div class="sub">쉼표 · 2026-08-19 · 이 문서는 시뮬레이터의 모든 숫자가 어떻게 나오고 어디까지 믿을 수 있는지를 정의합니다</div>
+
+<p>쉼표의 첫 번째 규칙은 <b>"확실하지 않으면 숫자를 내지 않는다"</b>입니다. 이 문서는 그 반대 급부로, 내놓은 숫자마다 계산 방법·근거·한계를 전부 공개합니다.</p>
+
+<h2>1. 역사 백테스트 (결정론) — 방법과 경계</h2>
+<ul>
+<li><b>방법:</b> 겹치는 30년 창(window)을 1년씩 이동하며 실제 역사 수익률로 인출 시뮬레이션. 미국 1928~2025(98년) → 68개 사이클, 한국 1980~2025(46년) → 사이클 수는 자산 구성에 따라 14~16개.</li>
+<li><b>경계:</b> 한국 30년 창은 <b>17개가 상한</b>(1980~1996 시작)이고 자산 구성 조건을 걸면 더 줄어듭니다. 이 표본으로 "성공확률"을 소수점까지 말하는 건 통계적으로 정직하지 않습니다. 백테스트 탭의 한국 숫자는 방향 지표로 읽어야 합니다.</li>
+<li><b>데이터:</b> 미국 S&P500 TR + 10년 국채 TR(Damodaran/NYU, FRED 교차검증) · KOSPI는 <b>가격수익률(PR)</b>(원본 지수 수치는 재배포 금지라 수익률 변환값만 임베드) + 배당은 ECOS 전기 현금배당 기준 TR 근사(2001~) + 국고채 3년 YTM(ECOS, 1998~) + CPI(ECOS).</li>
+</ul>
+
+<h2>2. 몬테카를로 — 역사 블록 부트스트랩 (v1 단일 모델)</h2>
+<p>순환 백테스트의 표본 한계(창 17개)를 넘기 위해, 관측된 역사를 <b>3년 블록 단위로 재조합</b>해 수천 개의 대체 역사를 만듭니다.</p>
+<ul>
+<li><b>표본 풀:</b> 미국 98년 + 한국 46년(TR 근사 포함) 혼합. 블록은 한 시계열 내부에서만抽取됩니다(미국-한국 경계를 잇는 블록 없음). 계열 선택 확률은 사용 가능 블록 수에 비례.</li>
+<li><b>블록 길이 3년:</b> 시퀀스 리스크(초기 수년 연착)를 보존하는 최소 단위로 잡았습니다. 이 선택 자체가 가정입니다 — 블록을 1년으로 줄이면 더 넓은 밴드, 10년으로 늘리면 좁은 밴드가 나옵니다.</li>
+<li><b>결정론:</b> RNG는 시드 고정(mulberry32). 같은 입력+시드는 새로고침해도 영원히 같은 결과를 냅니다. 골든 케이스 G16이 이를 회귀 검증합니다.</li>
+<li><b>연도별 스텝:</b> 고정 실질 인출(역사 CPI로 물가연동), 국민연금은 수령 개시 후 인출을 상쇄(실질 가치 일정 가정), 포트폴리오는 주식/채권 혼합 수익률 적용.</li>
+</ul>
+
+<h2>3. 몬테카를로의 한계 — 여기까지가 신뢰 경계</h2>
+<table>
+<tr><th>항목</th><th>상태</th><th>의미</th></tr>
+<tr><td>꼬리(tail)</td><td class="bad">관측 한계</td><td>1928~2025에 없던 더 나쁜 시나리오는 만들어내지 못함. "관측 범위 밖 시나리오 미표현" 라벨이 이 때문</td></tr>
+<tr><td>블록 길이·표본 경계</td><td class="warn">가정</td><td>블록 경계에서 장기 의존 구조가 절단됨 — 한국 고인플레 연쇄(80년대)는 부분 재현</td></tr>
+<tr><td>세금·건보료</td><td class="warn">미반영</td><td>고갈 확률은 세전 인출 기준. 세후 환산은 첫해 현금흐름 표에서 별도 계산</td></tr>
+<tr><td>국민연금</td><td class="warn">단순화</td><td>실질 가치 일정 가정(현행 법 개정·물가연동 무시)</td></tr>
+<tr><td>파라메트릭 모델(로그정규)</td><td class="dim">미탑재</td><td>σ 가정 논쟁을 피하기 위해 v1은 역사 블록만 사용. 수요 임계 충족 시 감도 표시와 함께 추가 예정</td></tr>
+</table>
+<p>왜 숫자를 더 내지 않나 — 몬테카를로의 분포 가정(수익률의 정규성, 변동성 추정)은 FIRE 커뮤니티에서 가장 많이 싸우는 지점입니다. 쉼표는 가정을 줄이는 방향(역사 재조합)을 택하고, 남는 불확실성은 라벨로 공개합니다.</p>
+
+<h2>4. 제도 상수 — 근거 티어와 갈등 보존</h2>
+<ul>
+<li><b>출처 신뢰 순위:</b> ① 시행령 원문(국가법령정보센터/법제처 미러) ② easylaw ③ 복지부·공단 보도자료 ④ 언론. NHIS 정적 페이지는 6년 냉동 상태로 블랙리스트.</li>
+<li><b>상태 라벨:</b> confirmed(원문 확인) / pending(법안 발의·입법예고 수준) / conflicted(출처 상충). 예: 국민연금 기금 소진 시점은 계산값이 아니라 <b>시나리오 토글</b>(2071 정부 공식 / 2064 / 2065 / 2073)로 표시.</li>
+<li><b>미확정 제도 원칙:</b> 국회 통과+시행일 확정 전 수치는 기본 결과 경로에 들어가지 않습니다. 시나리오 박스(법안 원문 링크·국회 단계·시행일 기준 예정일·현행↔개편 밴드)로만 존재합니다.</li>
+</ul>
+
+<h2>5. 데이터 리니지 — 스냅샷 매니페스트</h2>
+<p>임베드 시계열(US_CSV·KR_CSV·KR_DIV)과 ECOS 스냅샷의 sha256 해시 + 커버리지를 <code>data/snapshots/manifest.json</code>에 기록하고 CI가 매 빌드마다 검증합니다. 데이터가 매니페스트 없이 바뀌면 배포가 차단됩니다. 앱 푸터의 "데이터 스냅샷 YYYY.MM"이 이 리니지 버전입니다 — "왜 내 결과가 바뀌었나"의 답은 항상 ① 데이터 버전 ② rules 상수 ③ 시나리오 토글 셋 중 하나입니다.</p>
+
+<h2>6. 골든 케이스 — 회귀 테스트 목록 (2026-08-19: 20개)</h2>
+<pre>G1~G3   국민연금 산식 — 공단 간단계산기와 10원 단위 일치 (40년/조기5년/연기5년)
+G4      건보료: 이자배당 1,500만 + 재산과표 9,000만
+G5      금종과세 3,000만 단독 (원천+종합)
+G6      연금계좌 1,500만 (55세, 5.5%)
+G7      ISA 일반형 초과 300만 (9.9%)
+G8      해외주식 양도 1,200만 (250만 공제 후 22%)
+G9~G10d 목표액 3열 · 10억×4% 인출 방식별 실가용 4종 (3.20~3.96%)
+G11~G12 별표4 60등급표 원문 — 과표 3억/9억 (구 근사식 대비 +83%/+347% 오차 수정본)
+G16     MC 결정론 — 동일 시드 2회 실행 완전 동일
+G17     MC 스냅샷 — blend 60/40 @4% 30년 p50 실질 잔존 (±0.3%p)
+G18~G19 MC 스트레스/양성 — 한국 주식100% @6% 고갈>60% · 미국 60/40 @3% 고갈<15%
+G20     MC 지속가능 인출률 스냅샷 (고갈≤10%)
+</pre>
+<p class="note">배포 파이프라인: 골든 FAIL → 배포 차단. 매월 5일 06:00(KST) ECOS 자동갱신 → 골든 회귀 → 통과 시에만 커밋·배포. 상수 180일 미검증 시 헤더에 경고 배지.</p>
+
+<h2>7. 운영 규칙</h2>
+<ul>
+<li>무료 · 무로그인 · 계정 없음 · 결론 페이월 없음 — 정적 사이트(GitHub Pages) + 무료 Actions 자동화만 사용.</li>
+<li>6개월 무접속에도 정답 유지(죽음 테스트): 서버 의존 자산 없음, 모든 계산은 브라우저 로컬.</li>
+<li>법령 감시: 국가법령정보센터 Open API로 일 1회 해시 diff(키 등록 후 활성화) — 감지는 기계, 반영(판정·상수 수정·회귀)은 사람.</li>
+<li>KOSPI 지수 원본 재배포 금지 원칙 준수 — 수익률(변환값)만 임베드, 원본은 ECOS/KRX 링크.</li>
+</ul>
+
+<a class="cta" href="./index.html#sim">시뮬레이터로 돌아가기</a>
+<p class="note">이 문서는 투자자문이 아닙니다. 모든 확률은 관측된 역사의 재조합이며 미래를 보장하지 않습니다. 오류 발견 시 GitHub 이슈로 제보해주세요 — 반영 내역은 체인지로그에 기록됩니다.</p>
+
+</div></body></html>

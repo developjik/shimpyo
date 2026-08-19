@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISA 만기 데드라인 — 올해 연장할 것인가 | 쉼표</title>
+<meta name="description" content="2026년 세제개편안: 기존 ISA 만기 5년 제한이 2027년부터 적용. 올해 안에 연장하면 무기한 만기가 유지되는 시나리오. 현행과 개편안을 전부 공개하고 계산기로 답한다.">
+<meta property="og:title" content="ISA 만기 데드라인 — 올해 연장할 것인가">
+<meta property="og:description" content="기존 ISA 만기 최장 5년 제한(2027-01-01~). 국회 통과 전이므로 전부 시나리오로 표기한다. 현행 대비 절세액 계산기 포함.">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffffff;--panel:#f7f8fa;--panel2:#eef1f4;--line:#e3e7eb;--txt:#2c333d;--dim:#6b7684;--faint:#98a1ad;--up:#e5484d;--ok:#2e9e5b;--warn:#b8860b;--accent:#e65200;--mono:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--mono);line-height:1.65;font-size:15px;padding:24px 16px 60px}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:1.5rem;letter-spacing:-.02em;margin-bottom:6px}
+.sub{color:var(--faint);font-size:.82rem;margin-bottom:28px}
+h2{font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:34px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+p{margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:.85rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:right;white-space:nowrap}
+th{color:var(--dim);font-weight:500;background:var(--panel2);text-transform:uppercase;font-size:.7rem;letter-spacing:.05em}
+td:first-child,th:first-child{text-align:left}
+.num{font-variant-numeric:tabular-nums}
+.hl{color:var(--accent);font-weight:700}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:#f85149} .dim{color:var(--dim)} .faint{color:var(--faint)}
+.calc{border:1px solid var(--line);background:var(--panel);padding:14px 16px;margin:14px 0;font-size:.85rem}
+.calc .t{color:var(--accent);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+a{color:var(--dim);border-bottom:1px dotted #2a3442;text-decoration:none}
+a:hover{color:var(--accent)}
+.cta{display:inline-block;margin:26px 0;padding:10px 18px;border:1px solid var(--accent);color:var(--accent);font-size:.85rem}
+.note{font-size:.75rem;color:var(--faint);margin-top:8px;line-height:1.6}
+ul{margin:10px 0 10px 18px} li{margin:4px 0;font-size:.9rem}
+.badge{display:inline-block;font-size:.68rem;padding:1px 8px;border-radius:3px;letter-spacing:.04em;vertical-align:1px}
+.badge.confirmed{background:#e5f3ea;color:#1d7a44}
+.badge.pending{background:#fdf3e0;color:#9a6b00}
+input[type=number]{width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:.9rem;font-variant-numeric:tabular-nums}
+label{font-size:.8rem;color:var(--dim);display:block;margin:8px 0 2px}
+.out{margin-top:12px;font-size:.95rem}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>ISA 만기 데드라인 — 올해 안에 연장할 것인가</h1>
+<div class="sub">쉼표 · 2026-08-19 작성 · 상태: <span class="badge pending">개편안 pending (국회 통과 전)</span> · 현행 규칙은 <span class="badge confirmed">confirmed</span></div>
+
+<p>2026년 8월 3일 재정경제부 세제개편안이 발표된 뒤 커뮤니티에 "미리 연장해두야 하나" 문의가 폭증했습니다. 이 문서는 <b>아직 국회를 통과하지 않은 개편안</b>을 다룹니다. 쉼표 헌법상 통과+시행일 확정 전에는 어떤 숫자도 "확정"으로 내놓지 않습니다. 전부 출처와 함께 시나리오로 표기합니다.</p>
+
+<h2>무엇이 바뀌려나 — 개편안 요지 <span class="badge pending">pending · 국회 처리 12월경 예상</span></h2>
+<table>
+<tr><th>항목</th><th>현행 <span class="badge confirmed">confirmed</span></th><th>개편안 <span class="badge pending">pending</span></th></tr>
+<tr><td>기존 ISA 만기</td><td class="num ok">3년+연장 무제한</td><td class="num bad">최장 5년 제한</td></tr>
+<tr><td>연 납입한도 이월</td><td class="num">가능</td><td class="num bad">폐지</td></tr>
+<tr><td>기존 총한도</td><td class="num">1억 (일반 200만/서민 400만 연 납입)</td><td class="num">1억 유지</td></tr>
+<tr><td>비과세 범위</td><td class="num">200만(일반)/400만(서민) + 초과분 9.9% 분리과세</td><td class="num">국내 상장주식·주식형펀드·BDC 등 이자배당 <b>전액 비과세</b> (생산적금융 ISA)</td></tr>
+<tr><td>생산적금융 ISA 한도</td><td class="num">—</td><td class="num">연 2,000만 납입 · 총 2억</td></tr>
+<tr><td>만기(신형)</td><td class="num">—</td><td class="num">의무 3년 + 총 10년 · BDC 배당 9% 분리과세</td></tr>
+<tr><td>청년형 혜택</td><td class="num">—</td><td class="num">34세 이하·총급여 7,500만 이하: 납입액 10% 소득공제</td></tr>
+</table>
+<p class="note">적용 시점: 기존 ISA 제한(만기 5년·이월 폐지)은 <b>2027-01-01 이후 신규 가입·연장·납입분</b>부터. 생산적금융 ISA는 2027년 시행 목표, 2029년 가입분까지 혜택. 출처: 재정경제부 2026 세제개편안(2026-08-03 발표) · 뉴스1·조선비즈 2026-08-03, 한겨레 2026-08-05, 삼성증권 해설 2026-08-07. 국회 일정: 8월 입법예고 → 9월 국무회의 → 12월경 국회 처리 예상.</p>
+
+<h2>핵심 논점 — "올해 연장 락인"은 성립하는가</h2>
+<ul>
+<li><b>적용 규칙:</b> 개편안의 만기 5년 제한은 2027-01-01 <b>이후의 연장분</b>부터 적용됩니다. 2026년 안에 연장을 마치면 현행 무기한 연장 체계가 유지되는 해석이 우세합니다. <span class="badge pending">시나리오</span> — 법 문언 확정 전까지는 보장 아님.</li>
+<li><b>커뮤니티 반응:</b> 개편안 발표 직후 증권사 "연장 문의" 폭증, 만기를 9999년으로 설정 가능한 증권사로 이전하는 글이 실제로 유통되고 있습니다 (2026-08 실황).</li>
+<li><b>주의:</b> 연장은 "계좌 유지 + 납입 지속"이 전제입니다. 이미 가득 납입한 계좌라면 연장의 의미가 다를 수 있습니다. 본인 계좌의 잔여 비과세한도부터 확인하세요.</li>
+</ul>
+
+<h2>계산기 — 내 계좌의 절세액 (현행 유지 시)</h2>
+<div class="calc">
+<div class="t">3입력 · 현행 규칙(confirmed) 기준 · 국민연금·건보료와 무관</div>
+<label>잔여 비과세한도 (만원) <input id="i_h" type="number" value="3000" step="100"></label>
+<label>예상 연 수익률 (%) <input id="i_r" type="number" value="4" step="0.5"></label>
+<label>보유 기간 (년) <input id="i_n" type="number" value="10" step="1" min="1" max="40"></label>
+<div class="out" id="o_out"></div>
+</div>
+<p class="note">계산식: n년 후 한도 내 잔고 = H×(1+r)^n, 이자분 = 잔고−H, 과세계좌 대비 절세(단순) = 이자분×15.4%(일반 원천징수 기준). 복리는 연 1회 재투자 가정. 실제 초과분 9.9% 분리과세·개인 세율에 따라 달라집니다. 이 계산은 "현행 ISA를 유지할 때의 가치"를 보여주는 것이며 개편안 수치는 계산에 넣지 않았습니다(확정 전).</p>
+
+<h2>판정 가이드 <span class="badge pending">시나리오 — 최종 판단은 본인 몫</h2>
+<table>
+<tr><th>상황</th><th>검토 포인트</th></tr>
+<tr><td>잔여 비과세한도가 크고 장기 보유 예정</td><td class="num">올해 연장으로 무기한 체계 유지가 유리한 시나리오 (위 계산기로 규모 확인)</td></tr>
+<tr><td>이미 한도 소진·단기 해지 예정</td><td class="num">연장 의미 제한적 — 생산적 ISA(2027~) 대기 검토</td></tr>
+<tr><td>34세 이하·총급여 7,500만 이하</td><td class="num">개편 통과 시 청년형 소득공제 10% 검토 대상</td></tr>
+</table>
+<p class="note">국회 결과에 따라 전부 바뀔 수 있습니다. 통과되면 이 문서와 시뮬레이터 rules는 시행일 기준으로 갱신됩니다(반영 SLA: 원문 확인 후 2주). 부결되면 현행 유지로 본 문서의 "올해 연장" 논점은 소멸합니다.</p>
+
+<h2>내 숫자로 시뮬레이터 열기</h2>
+<a class="cta" href="./index.html#sim?spend=250&asset=5&birth=1990&retire=45">월 250만·5억·1990년생으로 계산기 열기</a>
+<p class="note">쉼표 시뮬레이터는 국민연금·건보료·세금을 통합 계산합니다. ISA 신구제 시뮬레이터 반영은 국회 통과+시행일 확정 후입니다. 이 문서는 투자자문이 아니며 개편안 수치는 확정 전입니다.</p>
+
+<script>
+function fmt(n){return Math.round(n).toLocaleString('ko-KR');}
+function calc(){
+  var H=(+document.getElementById('i_h').value||0)*10000;
+  var r=(+document.getElementById('i_r').value||0)/100;
+  var n=Math.min(40,Math.max(1,+document.getElementById('i_n').value||1));
+  var bal=H*Math.pow(1+r,n), interest=bal-H, tax=interest*0.154;
+  document.getElementById('o_out').innerHTML =
+    '한도 내 잔고: <b class="num hl">'+fmt(bal)+'만원</b> · 이자분: <b class="num">'+fmt(interest)+'만원</b><br>'+
+    '과세계좌 대비 절세(15.4% 단순): <b class="num ok">'+fmt(tax)+'만원</b> <span class="faint">(= 비과세 가치)</span>';
+}
+['i_h','i_r','i_n'].forEach(function(id){document.getElementById(id).addEventListener('input',calc);});
+calc();
+</script>
+
+</div></body></html>

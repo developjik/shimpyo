@@ -56,6 +56,7 @@ export function shareURL(state: SimState): string {
   (Object.keys(state) as (keyof SimState)[]).forEach((k) => {
     p.set(k, String(state[k]));
   });
+  p.set("u", "share"); // 채널 코드 — 공유 링크 유입 측정용(경로그래) · 상태 복원에는 무관
   return `${location.origin}${location.pathname}#sim?${p.toString()}`;
 }
 

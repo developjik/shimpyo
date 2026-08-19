@@ -1,0 +1,39 @@
+name: law-watch
+
+# 법령 감시 — 국가법령정보센터 Open API 일 1회 해시 diff (2026-08-18, 토론 D8/A3)
+# - LAW_API_KEY 미등록 시 우회 종료 (등록 후 자동 활성화)
+# - 감지는 기계, 반영(판정·rules 수정·회귀)은 사람 — 변경 시 이슈 자동 생성
+# - 2주 연속 실패 시 스크립트 자동 비활성화 (거짓 "변경 없음" 방지)
+
+on:
+  schedule:
+    - cron: "30 22 * * *"   # 07:30 KST
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run law watch
+        env:
+          LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/law_watch.mjs
+
+      - name: Commit state if changed
+        run: |
+          git config user.name "shimpyo-bot"
+          git config user.email "bot@shimpyo.local"
+          git add data/law_watch
+          git diff --cached --quiet || (git commit -m "chore: law-watch state $(date +%F)" && git push)

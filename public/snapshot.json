@@ -1,0 +1,17 @@
+{
+  "version": "2026.08",
+  "generated": "2026-08-19",
+  "coverage": {
+    "us": {
+      "first": 1928,
+      "last": 2025,
+      "rows": 98
+    },
+    "kr": {
+      "first": 1980,
+      "last": 2025,
+      "rows": 46
+    },
+    "kr_div": "2001-2025 (KR_DIV keys)"
+  }
+}
