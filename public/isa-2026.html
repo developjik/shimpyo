@@ -92,7 +92,7 @@ label{font-size:.8rem;color:var(--dim);display:block;margin:8px 0 2px}
 <script>
 function fmt(n){return Math.round(n).toLocaleString('ko-KR');}
 function calc(){
-  var H=(+document.getElementById('i_h').value||0)*10000;
+  var H=+document.getElementById('i_h').value||0;  // 만원 단위 유지
   var r=(+document.getElementById('i_r').value||0)/100;
   var n=Math.min(40,Math.max(1,+document.getElementById('i_n').value||1));
   var bal=H*Math.pow(1+r,n), interest=bal-H, tax=interest*0.154;
