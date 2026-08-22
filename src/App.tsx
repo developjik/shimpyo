@@ -53,9 +53,9 @@ export default function App() {
     <SnackbarProvider>
       <div className="app-shell">
         <header className="app-header">
-          <div className="logo" onClick={() => (location.hash = "#sim")}>
+          <button className="logo" onClick={() => (location.hash = "#sim")} aria-label="쉼표 홈 (시뮬레이터)">
             쉼표<span className="cursor">_</span>
-          </div>
+          </button>
           <div className="tagline">몇억이면 쉴 수 있는가, 근거는 전부 공개합니다</div>
           <span className={`rules-chip${staleness.stale ? " stale" : ""}`}>
             rules {RULES.version} · 상수 검증 {RULES.verified}
@@ -73,7 +73,7 @@ export default function App() {
             setTab(v as string);
           }}
         >
-          <TabsList>
+          <TabsList aria-label="섹션 탐색">
             {TABS.map((t) => (
               <TabsTrigger key={t.v} value={t.v}>{t.label}</TabsTrigger>
             ))}
