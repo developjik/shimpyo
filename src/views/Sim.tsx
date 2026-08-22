@@ -16,6 +16,40 @@ interface Props {
   reset: () => void;
 }
 
+/* ---------- 공통: 정보 툴팁 (ⓘ) ---------- */
+function Info({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="info-wrap">
+      <button
+        className="info-btn"
+        aria-label="쉬운 설명 보기"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        onBlur={() => setOpen(false)}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+      >i</button>
+      {open && <span className="info-tip" role="tooltip">{children}</span>}
+    </span>
+  );
+}
+
+/* ---------- 공통: 프리셋 칩 ---------- */
+function Chips({ label, options, cur, onPick, unit }: {
+  label: string; options: number[]; cur: number; onPick: (v: number) => void; unit: string;
+}) {
+  return (
+    <div className="chips" role="group" aria-label={label}>
+      {options.map((o) => (
+        <button key={o} className={cur === o ? "chip on" : "chip"} onClick={() => onPick(o)}>
+          {o}{unit}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ---------- 결과 카드 (canvas PNG) ---------- */
 function drawResultCard(state: SimState, headline: { goal4: number; effWr: number }): HTMLCanvasElement {
   const W = 1200, H = 630;
@@ -41,7 +75,6 @@ function drawResultCard(state: SimState, headline: { goal4: number; effWr: numbe
   g.fillStyle = dim; g.font = "26px -apple-system, 'Apple SD Gothic Neo', sans-serif";
   const gap4 = state.asset * 1e8 - headline.goal4;
   g.fillText(`보유 ${state.asset}억 → ${gap4 >= 0 ? "달성" : `부족 ${(-gap4 / 1e8).toFixed(2)}억`} · 월 지출 ${state.spend}만원`, 48, 340);
-  const cols: [string, number][] = [["3.5%", state.spend * 12], ["4.0%", state.spend * 12], ["5.0%", state.spend * 12]];
   g.fillStyle = panel; g.fillRect(640, 170, 512, 190);
   (["3.5%", "4.0%", "5.0%"] as const).forEach((label, i) => {
     const r = Number(label.replace("%", "")) / 100;
@@ -64,6 +97,9 @@ export default function SimView({ state, set, reset }: Props) {
   const snackbar = useSnackbarAdapter();
   const [showMore, setShowMore] = useState(false);
   const [showBand, setShowBand] = useState(false);
+  const [hello, setHello] = useState(() => {
+    try { return !localStorage.getItem("shimpyo.seen"); } catch { return false; }
+  });
 
   const annual = state.spend * 10000 * 12;
   const assetWon = state.asset * 1e8;
@@ -111,10 +147,7 @@ export default function SimView({ state, set, reset }: Props) {
   };
 
   const toast = (msg: string) =>
-    snackbar.create({
-      onClose: () => {},
-      render: () => <Snackbar message={msg} />,
-    });
+    snackbar.create({ onClose: () => {}, render: () => <Snackbar message={msg} /> });
 
   const copy = async (text: string, msg: string) => {
     try { await navigator.clipboard.writeText(text); toast(msg); } catch { toast("복사 실패"); }
@@ -147,6 +180,9 @@ export default function SimView({ state, set, reset }: Props) {
   const gap4 = assetWon - goal4;
   const bandInvest = nationalDecile(state.asset);
   const bandWithDep = nationalDecile(state.asset + state.dep);
+  const sustainNet = mc?.sustainable
+    ? withdrawAfterTax(assetWon * mc.sustainable, state.wdl, 0, 0, 0, state.dep * 1e8, Number(state.refl)).net / 12
+    : null;
 
   const issueURL = "https://github.com/developjik/shimpyo/issues/new?title=" +
     encodeURIComponent("[오류 제보] 시뮬레이터 숫자 이상") +
@@ -155,73 +191,128 @@ export default function SimView({ state, set, reset }: Props) {
       `rules ${RULES.version} (${RULES.verified})\n입력: 월지출 ${state.spend}만 · 자산 ${state.asset}억 · 출생 ${state.birth} · 인출 ${state.wdl}\n예상 vs 실제:\n\n(무엇이 이상한지 적어주세요 — 반영 내역은 체인지로그에 기록됩니다)`
     );
 
+  const dismissHello = () => {
+    setHello(false);
+    try { localStorage.setItem("shimpyo.seen", "1"); } catch {}
+  };
+
   return (
     <div>
-      {/* ===== 1단계: 3질문 ===== */}
+      {/* ===== 첫 방문 안내 ===== */}
+      {hello && (
+        <div className="hello" role="note">
+          <div>
+            <b>세 개만 물어볼게요.</b> 월 지출·모은 돈·출생연도를 넣으면 바로 아래에 답이 나옵니다.
+            모든 숫자는 어디서 왔는지 근거가 붙어 있고, 계산은 브라우저에서만 됩니다(서버 전송 0건).
+          </div>
+          <button onClick={dismissHello} aria-label="닫기">✕</button>
+        </div>
+      )}
+
+      {/* ===== ① 내 조건 ===== */}
       <div className="card">
         <div className="card-title">
-          세 개만 물을게요
-          <span className="mono-note">입력값은 브라우저(localStorage)에만 저장됩니다 · 서버 전송 없음</span>
+          <span><span className="step-num">1</span>내 조건</span>
+          <span className="mono-note">입력값은 이 브라우저에만 저장됩니다</span>
         </div>
         <div className="hero-grid">
-          <TextField label="월 지출" indicator="만원">
-            <TextFieldInput type="number" value={state.spend} onChange={(e: any) => set("spend", Number(e.target.value) || 0)} />
-          </TextField>
-          <TextField label="모은 돈 (투자 자산)" indicator="억원" description="전세보증금 제외">
-            <TextFieldInput type="number" step="0.1" value={state.asset} onChange={(e: any) => set("asset", Number(e.target.value) || 0)} />
-          </TextField>
-          <TextField label="출생연도" indicator={`(${age}세)`}>
-            <TextFieldInput type="number" value={state.birth} onChange={(e: any) => set("birth", Number(e.target.value) || 1990)} />
-          </TextField>
+          <div>
+            <TextField label="월 지출" indicator="만원">
+              <TextFieldInput type="number" inputMode="numeric" value={state.spend} onChange={(e: any) => set("spend", Number(e.target.value) || 0)} />
+            </TextField>
+            <Chips label="월 지출 빠른 선택" options={[150, 200, 250, 300]} cur={state.spend} onPick={(v) => set("spend", v)} unit="" />
+          </div>
+          <div>
+            <TextField label="모은 돈 (투자 자산)" indicator="억원" description="전세보증금 제외">
+              <TextFieldInput type="number" step="0.1" inputMode="decimal" value={state.asset} onChange={(e: any) => set("asset", Number(e.target.value) || 0)} />
+            </TextField>
+            <Chips label="모은 돈 빠른 선택" options={[3, 5, 7, 10]} cur={state.asset} onPick={(v) => set("asset", v)} unit="" />
+          </div>
+          <div>
+            <TextField label="출생연도" indicator={`(${age}세)`}>
+              <TextFieldInput type="number" inputMode="numeric" value={state.birth} onChange={(e: any) => set("birth", Number(e.target.value) || 1990)} />
+            </TextField>
+            <Chips label="출생연도 빠른 선택" options={[1980, 1985, 1990, 1995]} cur={state.birth} onPick={(v) => set("birth", v)} unit="" />
+          </div>
         </div>
         <div className="row">
           <ActionButton variant="neutralOutline" onClick={() => setShowMore(!showMore)}>
-            {showMore ? "상세 조건 접기" : "상세 조건 열기 (전문가용)"}
+            {showMore ? "상세 조건 접기" : "더 정확히 조정 (전문가용)"}
           </ActionButton>
-          <ActionButton variant="brandSolid" onClick={() => copy(shareURL(state), "공유 URL 복사됨 (내 상태 포함)")}>URL 공유 복사</ActionButton>
-          <ActionButton variant="brandSolid" onClick={saveCard}>결과카드 PNG</ActionButton>
+          <ActionButton variant="brandSolid" onClick={() => copy(shareURL(state), "공유 URL 복사됨 (내 상태 포함)")}>내 결과 공유</ActionButton>
+          <ActionButton variant="brandSolid" onClick={saveCard}>결과카드 이미지 저장</ActionButton>
           <ActionButton variant="neutralWeak" onClick={() => copy(mdSummary, "마크다운 요약 복사됨")}>마크다운 요약</ActionButton>
           <ActionButton variant="ghost" onClick={reset}>초기화</ActionButton>
         </div>
       </div>
 
-      {/* ===== 2단계: 첫 줄 답 ===== */}
+      {/* ===== ② 답 ===== */}
       <div className="card">
         <div className="card-title">
-          답부터
-          <span className="mono-note">세전 인출 기준 · 아래에서 인출 방식별 세후 확인</span>
+          <span><span className="step-num">2</span>답</span>
+          <span className="mono-note">세전 인출 기준 · 아래에서 근거 확인</span>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 12 }}>
-          <div style={{ fontSize: 44, fontWeight: 800 }}>
-            {state.spend > 0 ? <>{(goal4 / 1e8).toFixed(1)}억</> : "지출을 입력하세요"}
-          </div>
-          <div style={{ opacity: 0.75 }}>
-            월 {state.spend}만원이 4% 룰이면 필요한 돈 ·{" "}
-            {gap4 >= 0
-              ? <span style={{ color: "#2e9e5b", fontWeight: 700 }}>지금 도달 (+{(gap4 / 1e8).toFixed(1)}억)</span>
-              : <span style={{ color: "#f85149", fontWeight: 700 }}>{(-gap4 / 1e8).toFixed(1)}억 더</span>}
-          </div>
-        </div>
-        <div style={{ marginTop: 8, fontSize: 13 }}>
-          왜 "4%"가 실제로는 {pct(effWr, 2)}가 되는가 →{" "}
-          <a href="./four-percent.html" style={{ textDecoration: "underline" }}>4% 룰, 한국 데이터로 검증한 결과</a> ·{" "}
-          <a href="./myeoneok.html" style={{ textDecoration: "underline" }}>몇억이면 되나 — 계산으로 답한다</a>
-        </div>
+        {state.spend > 0 ? (
+          <>
+            <div className="answer-hero">
+              <div className="answer-num">
+                {(goal4 / 1e8).toFixed(1)}<span className="answer-unit">억</span>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, color: "var(--seed-color-fg-neutral)" }}>
+                  월 {state.spend}만원을 쓰려면 <b>4% 룰</b>
+                  <Info>미국 30년 데이터에서 나온 규칙: 자산의 4%만 매년 쓰면 대부분 30년을 버팁니다. 한국 데이터로는 더 보수적이어야 해서 3열로 같이 보여줍니다.</Info>
+                  로 필요한 돈
+                </div>
+                <div className={`answer-state ${gap4 >= 0 ? "good" : "bad"}`}>
+                  {gap4 >= 0
+                    ? `지금 도달했어요 (+${(gap4 / 1e8).toFixed(1)}억 여유)`
+                    : `${(-gap4 / 1e8).toFixed(1)}억이 더 필요해요`}
+                </div>
+              </div>
+            </div>
+            <div className="gauge" role="img" aria-label={`보유 ${state.asset}억 중 목표 ${(goal4 / 1e8).toFixed(1)}억`}>
+              <div className="gauge-track">
+                <div
+                  className={`gauge-fill ${gap4 >= 0 ? "over" : "under"}`}
+                  style={{ width: `${Math.max(2, Math.min(100, (assetWon / goal4) * 100))}%` }}
+                />
+                <div className="gauge-marker" style={{ left: "calc(100% - 2px)" }} />
+              </div>
+              <div className="gauge-legend">
+                <span>보유 {state.asset}억</span>
+                <span>목표(4%) {(goal4 / 1e8).toFixed(1)}억</span>
+              </div>
+            </div>
+            <div style={{ marginTop: 10, fontSize: 13 }}>
+              왜 "4%"가 실제로는 <b>{pct(effWr, 2)}</b>가 되는가 →{" "}
+              <a href="./four-percent.html">4% 룰, 한국 데이터로 검증한 결과</a> ·{" "}
+              <a href="./myeoneok.html">몇억이면 되나 — 계산으로 답한다</a>
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: 16, color: "var(--seed-color-fg-neutral)" }}>위에 월 지출을 넣어주세요.</div>
+        )}
       </div>
 
-      {/* ===== 3단계: 3열 (증명 1단) ===== */}
+      {/* ===== ③ 인출률 3열 ===== */}
       <div className="card">
-        <div className="card-title">필요 자산 — 인출률 3열 병렬 <span className="mono-note">하나를 고르라고 하지 않습니다</span></div>
+        <div className="card-title">
+          <span><span className="step-num">3</span>안전한 만큼만 쓰면 (인출률 비교)</span>
+          <span className="mono-note">하나를 고르라고 하지 않습니다</span>
+        </div>
         <div className="kpis">
           {[0.035, 0.04, 0.05].map((r) => {
             const goal = annual / r;
             const gap = assetWon - goal;
             return (
               <div className="kpi" key={r}>
-                <div className="k">목표 자산 @ {pct(r)}</div>
-                <div className="v">{(goal / 1e8).toFixed(2)}억</div>
+                <div className="k">연 {pct(r)}만 쓸 때</div>
+                <div className="v">{(goal / 1e8).toFixed(2)}<span className="unit">억</span></div>
                 <div className="s">
                   {gap >= 0 ? <span className="good">달성 (+{(gap / 1e8).toFixed(2)}억)</span> : <span className="neg">부족 {(-gap / 1e8).toFixed(2)}억</span>}
+                  <br />
+                  {r === 0.035 ? "가장 안전 (보수적)" : r === 0.04 ? "널리 쓰는 기준" : "공격적 (실패 위험↑)"}
                 </div>
               </div>
             );
@@ -229,52 +320,70 @@ export default function SimView({ state, set, reset }: Props) {
         </div>
       </div>
 
-      {/* ===== 첫해 현금흐름 (증명 2단) ===== */}
+      {/* ===== ④ 첫해 현금흐름 ===== */}
       <div className="card">
         <div className="card-title">
-          지금 인출 시작 시 — 첫해 현금흐름
+          <span><span className="step-num">4</span>지금 그만두면 첫해 현금흐름</span>
           <span className="mono-note">
             {{ interest: "전액 이자·배당 (보수적 상한)", dom_sell: "국내 상장주식 매도", mix: "연금계좌 + 국내주식 매도", fgn_sell: "해외주식 매도 (이익률 50%)" }[state.wdl]}
           </span>
         </div>
         <table className="dt">
           <tbody>
-            <tr><td>인출액 (세전)</td><td>{fmtW(gross)}원</td><td className="faint">자산 {state.asset}억 × {pct(Number(state.rate))}</td></tr>
-            <tr><td>세금 (방식별)</td><td className="neg">-{fmtW(w.tax)}원</td><td className="faint">{w.detail}</td></tr>
-            <tr><td>건보료+장기요양 (연)</td><td className="neg">-{fmtW(w.ins)}원</td><td className="faint">월 {fmtW(w.hiM + w.ltcM)} (건보 {fmtW(w.hiM)} + LTC {fmtW(w.ltcM)}) · 반영율 {pct(Number(state.refl), 0)}</td></tr>
-            <tr><td>실가용 (연)</td><td className="brand">{fmtW(w.net)}원</td><td className="faint">월 {fmtW(w.net / 12)}</td></tr>
+            <tr>
+              <td>인출액 (세전)</td><td>{fmtW(gross)}원</td>
+              <td className="faint">자산 {state.asset}억 × {pct(Number(state.rate))}</td>
+            </tr>
+            <tr>
+              <td>세금<Info>이자·배당은 15.4% 원천징수 후 2,000만원 넘으면 누진과세(금융소득종합과세). 주식 매도는 양도세·거래세가 붙고, 연금계좌는 낮은 연금소득세만 냅니다.</Info></td>
+              <td className="neg">-{fmtW(w.tax)}원</td>
+              <td className="faint">{w.detail}</td>
+            </tr>
+            <tr>
+              <td>건강보험료+장기요양<Info>직장을 그만두면 지역가입자가 되어 소득(이자·배당 100%, 연금 50%)과 재산에 보험료가 붙습니다. 은퇴 설계에서 가장 큰 숨은 비용이에요.</Info></td>
+              <td className="neg">-{fmtW(w.ins)}원</td>
+              <td className="faint">월 {fmtW(w.hiM + w.ltcM)} · 반영율 {pct(Number(state.refl), 0)}</td>
+            </tr>
+            <tr><td>실제 쓸 수 있는 돈 (연)</td><td className="brand">{fmtW(w.net)}원</td><td className="faint">월 {fmtW(w.net / 12)}</td></tr>
             <tr>
               <td>월 지출 대비</td>
               <td>{w.net >= annual ? <span className="good">여유 +{fmtW((w.net - annual) / 12)}/월</span> : <span className="neg">적자 {fmtW((annual - w.net) / 12)}/월</span>}</td>
               <td className="faint"></td>
             </tr>
-            <tr><td>유효 인출률</td><td className="brand">{pct(effWr, 2)} <span style={{ fontWeight: 400 }}>(명목 {pct(Number(state.rate))})</span></td><td className="faint">세금·건보료 반영 후 · 이자배당 3.2% vs 국내주식 매도 3.96%</td></tr>
+            <tr>
+              <td>유효 인출률<Info>세금과 건보료를 뺀 뒤 실제로 쓸 수 있는 돈의 비율. "4%"가 실제로는 3.2~4.0%로 줄어드는 이유입니다.</Info></td>
+              <td className="brand">{pct(effWr, 2)} <span style={{ fontWeight: 400 }}>(명목 {pct(Number(state.rate))})</span></td>
+              <td className="faint">이자배당 3.2% vs 국내주식 매도 3.96%</td>
+            </tr>
           </tbody>
         </table>
         <div className="card-note">
-          건보료가 왜 이렇게 크나 → <a href="./hi-bomb.html" style={{ textDecoration: "underline" }}>건보료 폭탄 완전 정리</a> ·
-          인출 방식을 바꿔가며 비교해 보세요. 매도 인출(양도세·기본공제)이나 연금계좌(건보료 면제) 전환 시 실가용이 달라집니다.
+          건보료가 왜 이렇게 크나 → <a href="./hi-bomb.html">건보료 폭탄 완전 정리</a> ·
+          인출 방식(위 상세 조건에서 변경)에 따라 같은 자산에서 수백만원이 왕복합니다.
         </div>
       </div>
 
-      {/* ===== 국민연금 브리지 ===== */}
+      {/* ===== ⑤ 국민연금 브리지 ===== */}
       <div className="card">
-        <div className="card-title">국민연금 브리지 <span className="status-badge confirmed">수령 연령·감액 규칙: 1차 출처 확정</span></div>
+        <div className="card-title">
+          <span><span className="step-num">5</span>국민연금 — 언제부터 얼마나 받나</span>
+          <span className="status-badge confirmed">수령 규칙: 1차 출처 확정</span>
+        </div>
         <table className="dt">
           <tbody>
             <tr><td>수령 개시 연령</td><td>{claimAge}세</td><td className="faint">출생연도 매핑 (1969년생+ 65세)</td></tr>
-            <tr><td>공백기</td><td>{bridge > 0 ? `${bridge}년` : "없음"}</td><td className="faint">은퇴 {state.retire}세 → 수령 {claimAge}세</td></tr>
             <tr>
-              <td>예상 월액</td>
-              <td className="brand">{fmtM(np.monthly)}만원</td>
-              <td className="faint">
-                {np.auto
-                  ? `내장 산식 · K̄=${(np as any).kbar?.toFixed(3)} · 지급률 ${pct((np as any).rate || 0, 0)} · 공단 계산기와 10원 단위 일치`
-                  : "수동 입력값"}
-              </td>
+              <td>공백기<Info>은퇴하고 국민연금이 시작되기 전까지 스스로 버텨야 하는 기간. 이 구간의 인출 순서(어떤 통장부터 쓸지)가 세금을 좌우합니다.</Info></td>
+              <td>{bridge > 0 ? `${bridge}년` : "없음"}</td>
+              <td className="faint">은퇴 {state.retire}세 → 수령 {claimAge}세</td>
             </tr>
-            <tr><td>조기노령 대안</td><td>최대 {claimAge - 5}세부터 · 연 6% 감액</td><td className="faint">5년 조기 시 70% = {fmtM(np.monthly * 0.7)}만원 · 소득 발생 시 지급 정지</td></tr>
-            <tr><td>연기 옵션</td><td>최대 70세까지 · 월 0.6% 가산</td><td className="faint">5년 연기 시 136% = {fmtM(np.monthly * 1.36)}만원</td></tr>
+            <tr>
+              <td>예상 월액<Info>국민연금공단 계산기와 10원 단위까지 같은 내장 산식입니다. 가입 기간·평균 소득(상세 조건)으로 바뀝니다.</Info></td>
+              <td className="brand">{fmtM(np.monthly)}만원</td>
+              <td className="faint">{np.auto ? `공단 계산기와 10원 단위 일치` : "수동 입력값"}</td>
+            </tr>
+            <tr><td>더 일찍 받기 (조기노령)</td><td>최대 {claimAge - 5}세부터</td><td className="faint">5년 조기 시 70% = {fmtM(np.monthly * 0.7)}만원 · 소득 발생 시 정지</td></tr>
+            <tr><td>더 늦게 받기 (연기)</td><td>최대 70세까지</td><td className="faint">5년 연기 시 136% = {fmtM(np.monthly * 1.36)}만원</td></tr>
             <tr>
               <td>건보료 영향</td>
               <td>공적연금 50% 반영</td>
@@ -283,29 +392,50 @@ export default function SimView({ state, set, reset }: Props) {
           </tbody>
         </table>
         <div className="card-note">
-          기금 소진 시점은 계산값이 아닌 시나리오 표시입니다: 정부 공식 2071(수익률 5.5% 가정) / 2064(4.5%) / NABO 2065·2073 — 국가 지급보장 명문화(법 제3조의2).
-          인출 방식별 세금 계산 로직은 "근거·출처" 탭에서 전부 공개됩니다.
+          기금 소진 시점은 계산값이 아닌 시나리오입니다: 정부 공식 2071(수익률 5.5% 가정) / 2064(4.5%) / NABO 2065·2073 — 국가 지급보장이 법에 명문화(법 제3조의2)되어 있습니다.
         </div>
       </div>
 
-      {/* ===== 몬테카를로 (역사 블록 부트스트랩) ===== */}
+      {/* ===== ⑥ 몬테카를로 ===== */}
       <div className="card">
         <div className="card-title">
-          1만 개의 역사 — 고갈 확률
-          <span className="mono-note">미국 98년 + 한국 46년 혼합 풀 · 3년 블록 리샘플 · 시드 고정(같은 입력=같은 답)</span>
+          <span><span className="step-num">6</span>100명이 같은 조건이면 — 고갈 확률<Info>미국 98년+한국 46년의 실제 역사를 3년 단위로 잘라 재조합해 수천 개의 미래를 만들어 본 결과입니다. 관측된 역사보다 나쁜 미래는 표현하지 못 한다는 한계가 있어요.</Info></span>
+          <span className="mono-note">미국+한국 혼합 풀 · 시드 고정(같은 입력=같은 답)</span>
         </div>
         <div className="row">
           <ActionButton variant="brandSolid" onClick={runMCJob}>
-            {mc?.running ? "계산 중…" : "4,000경로 실행 (브라우저에서, 서버 전송 없음)"}
+            {mc?.running ? "계산 중…" : "4,000개 미래 계산해 보기"}
           </ActionButton>
         </div>
-        {mc?.err && <div className="card-note" style={{ color: "#f85149" }}>계산 실패: {mc.err}</div>}
+        {mc?.err && <div className="card-note" style={{ color: "var(--bad)" }}>계산 실패: {mc.err}</div>}
         {mc?.res && (
           <div style={{ marginTop: 12 }}>
-            <div className="kpis">
+            <div className="mc-visual">
+              <Donut failRate={mc.res.depletionRate} />
+              <div className="mc-sentence">
+                100명이 내 조건으로 은퇴하면{" "}
+                <b style={{ color: mc.res.depletionRate > 0.2 ? "var(--bad)" : mc.res.depletionRate > 0.1 ? "var(--warn)" : "var(--ok)" }}>
+                  {Math.round(mc.res.depletionRate * 100)}명
+                </b>
+                은 중간에 돈이 바닥나고,{" "}
+                <b style={{ color: "var(--ok)" }}>{100 - Math.round(mc.res.depletionRate * 100)}명</b>은 끝날 때 돈이 남습니다.
+                {mc.sustainable && (
+                  <>
+                    <br />
+                    매년 <b>{pct(mc.sustainable)}</b>까지만 쓰면 100명 중 90명은 안전합니다
+                    {sustainNet && <> (세후 월 {fmtW(sustainNet)})</>}.
+                  </>
+                )}
+                <br />
+                <span style={{ fontSize: 12, color: "var(--seed-color-fg-neutral)" }}>
+                  {mc.years}년 인출 · 국민연금 상쇄 반영 · 세금 미반영 · 실행 {mc.ms}ms
+                </span>
+              </div>
+            </div>
+            <div className="kpis" style={{ marginTop: 12 }}>
               <div className="kpi">
-                <div className="k">고갈 확률 ({mc.years}년, {pct(Number(state.rate))} 인출)</div>
-                <div className="v" style={{ color: mc.res.depletionRate > 0.2 ? "#f85149" : mc.res.depletionRate > 0.1 ? "#b8860b" : "#2e9e5b" }}>
+                <div className="k">고갈 확률 ({mc.years}년, {pct(Number(state.rate))})</div>
+                <div className="v" style={{ color: mc.res.depletionRate > 0.2 ? "var(--bad)" : mc.res.depletionRate > 0.1 ? "var(--warn)" : "var(--ok)" }}>
                   {pct(mc.res.depletionRate)}
                 </div>
                 <div className="s">국민연금 상쇄 반영 · 세금 미반영</div>
@@ -316,18 +446,15 @@ export default function SimView({ state, set, reset }: Props) {
                 <div className="s">시작 연도 운이 아니라 분포로 판정</div>
               </div>
               <div className="kpi">
-                <div className="k">지속가능 월 인출 (세후 환산)</div>
-                <div className="v">{mc.sustainable ? fmtW(withdrawAfterTax(assetWon * mc.sustainable, state.wdl, 0, 0, 0, state.dep * 1e8, Number(state.refl)).net / 12) : "—"}</div>
+                <div className="k">지속가능 월 인출 (세후)</div>
+                <div className="v">{sustainNet ? fmtW(sustainNet) : "—"}</div>
                 <div className="s">첫해 기준 · 현재 인출 방식 기준</div>
               </div>
             </div>
             <div className="card-note">
-              실행 {mc.ms}ms · {mc.res.sampleNote}
-              <br />
-              <b>한계 고지:</b> 밴드는 관측된 역사(1928~2025)의 재조합입니다. 관측 범위 밖 시나리오(더 나쁜 꼬리)는 표현하지 않습니다.
-              세금·건보료 미반영(위 표에서 별도 환산) · 국민연금 실질 가치 일정 가정.
-              <button onClick={() => setShowBand(!showBand)} style={{ marginLeft: 8, border: "none", background: "none", color: "#e65200", cursor: "pointer", textDecoration: "underline", fontSize: "inherit", padding: 0 }}>
-                {showBand ? "연도별 밴드 접기" : "연도별 밴드 상세 보기"}
+              {mc.res.sampleNote} · <b>한계 고지:</b> 관측된 역사(1928~2025)의 재조합이라 그보다 나쁜 꼬리는 없습니다.
+              <button onClick={() => setShowBand(!showBand)} style={{ marginLeft: 8, border: "none", background: "none", color: "var(--brand)", cursor: "pointer", textDecoration: "underline", fontSize: "inherit", padding: 0 }}>
+                {showBand ? "연도별 그래프 접기" : "연도별 그래프 보기"}
               </button>
             </div>
             {showBand && <BandChart p10={mc.res.real.p10} p50={mc.res.real.p50} p90={mc.res.real.p90} />}
@@ -336,34 +463,40 @@ export default function SimView({ state, set, reset }: Props) {
         {!mc && (
           <div className="card-note">
             순환 백테스트의 한계: 한국 데이터 46년이라 30년 창이 17개뿐 — "시작 연도 운"이 확률을 지배합니다.
-            역사 블록을 재조합한 수천 경로로 시퀀스 리스크를 분포로 봅니다. 방법론·한계 전문: <a href="./methodology.html" style={{ textDecoration: "underline" }}>방법론과 한계</a>
+            역사를 재조합한 수천 경로로 시퀀스 리스크를 분포로 봅니다. 방법론·한계 전문: <a href="./methodology.html">방법론과 한계</a>
           </div>
         )}
       </div>
 
-      {/* ===== 또래 밴드 한 줄 ===== */}
+      {/* ===== ⑦ 또래 비교 ===== */}
       <div className="card">
-        <div className="card-title">또래 중 나는 어디쯤 <span className="mono-note">가계금융복지조사 2025 · 전국 가구 순자산 10분위</span></div>
-        <div style={{ fontSize: 20, fontWeight: 600 }}>
+        <div className="card-title">
+          <span><span className="step-num">7</span>또래 중 나는 어디쯤</span>
+          <span className="mono-note">가계금융복지조사 2025 · 전국 가구 순자산 10분위</span>
+        </div>
+        <div style={{ fontSize: 19, fontWeight: 600, lineHeight: 1.6 }}>
           투자자산만 {state.asset}억 → <b>{bandInvest}</b>
           {state.dep > 0 && <> · 전세보증금 포함 {state.asset + state.dep}억 → <b>{bandWithDep}</b></>}
         </div>
         <div className="card-note">
-          전세보증금은 회수 불가능한 자산입니다(만기 전에는 쓸 수 없음) · 통계는 가구 기준이라 1인 가구 비교에는 한계 · 자세히: <a href="#band" style={{ textDecoration: "underline" }}>또래 밴드 탭</a>
+          전세보증금은 만기 전에 쓸 수 없는 돈이라 따로 보여줍니다 · 통계는 가구 기준이라 1인 가구 비교에는 한계 · 자세히: <a href="#band">또래 밴드 탭</a>
         </div>
       </div>
 
-      {/* ===== 제보·문서 링크 ===== */}
+      {/* ===== ⑧ 제보·문서 ===== */}
       <div className="card">
-        <div className="card-title">숫자가 이상하면 제보해주세요 <span className="mono-note">제보 → 검증 → 반영까지 체인지로그에 기록</span></div>
+        <div className="card-title">
+          <span><span className="step-num">8</span>숫자가 이상하면 제보해주세요</span>
+          <span className="mono-note">제보 → 검증 → 반영까지 기록</span>
+        </div>
         <div className="row" style={{ gap: 10, flexWrap: "wrap", fontSize: 13 }}>
-          <a href={issueURL} target="_blank" rel="noreferrer" style={{ textDecoration: "underline" }}>GitHub 이슈로 제보 (입력값 자동 첨부)</a>
+          <a href={issueURL} target="_blank" rel="noreferrer">GitHub 이슈로 제보 (입력값 자동 첨부)</a>
           <span style={{ opacity: 0.4 }}>·</span>
-          <a href="./isa-2026.html" style={{ textDecoration: "underline" }}>ISA 만기 데드라인 (2026년 4분기)</a>
+          <a href="./isa-2026.html">ISA 만기 데드라인 (2026년 4분기)</a>
           <span style={{ opacity: 0.4 }}>·</span>
-          <a href="./report-0.html" style={{ textDecoration: "underline" }}>또래 밴드 리포트 #0</a>
+          <a href="./report-0.html">또래 밴드 리포트 #0</a>
           <span style={{ opacity: 0.4 }}>·</span>
-          <a href="./methodology.html" style={{ textDecoration: "underline" }}>방법론과 한계</a>
+          <a href="./methodology.html">방법론과 한계</a>
         </div>
       </div>
 
@@ -446,7 +579,40 @@ export default function SimView({ state, set, reset }: Props) {
           </div>
         </div>
       )}
+
+      {/* ===== 모바일 하단 고정 답 바 ===== */}
+      <div className="sticky-bar" aria-hidden="false">
+        <div className="sb-main">
+          <div className="sb-num">
+            {state.spend > 0 ? (
+              <>
+                {(goal4 / 1e8).toFixed(1)}억
+                <span style={{ fontSize: 13, fontWeight: 700, color: gap4 >= 0 ? "var(--ok)" : "var(--bad)", marginLeft: 8 }}>
+                  {gap4 >= 0 ? `도달 (+${(gap4 / 1e8).toFixed(1)})` : `${(-gap4 / 1e8).toFixed(1)}억 더`}
+                </span>
+              </>
+            ) : "지출 입력"}
+          </div>
+          <div className="sb-sub">월 {state.spend || "-"}만원 기준 4% 룰 · 상태는 공유 링크에만 담깁니다</div>
+        </div>
+        <ActionButton variant="brandSolid" className="shrink" onClick={() => copy(shareURL(state), "공유 URL 복사됨")}>공유</ActionButton>
+      </div>
     </div>
+  );
+}
+
+/* ---------- MC 도넛 ---------- */
+function Donut({ failRate }: { failRate: number }) {
+  const R = 44, C = 2 * Math.PI * R;
+  const failLen = C * Math.min(1, Math.max(0, failRate));
+  return (
+    <svg className="donut" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label={`100명 중 ${Math.round(failRate * 100)}명 고갈`}>
+      <circle className="track" cx="60" cy="60" r={R} fill="none" strokeWidth="12" />
+      <circle className="pass" cx="60" cy="60" r={R} fill="none" strokeWidth="12" strokeDasharray={`${C - failLen} ${C}`} transform="rotate(-90 60 60)" strokeLinecap="round" opacity="0.9" />
+      <circle className="fail" cx="60" cy="60" r={R} fill="none" strokeWidth="12" strokeDasharray={`${failLen} ${C}`} strokeDashoffset={-(C - failLen)} transform="rotate(-90 60 60)" strokeLinecap="round" />
+      <text x="60" y="56" textAnchor="middle" fontSize="26" fontWeight="800" fill="var(--seed-color-fg-normal)">{Math.round(failRate * 100)}</text>
+      <text x="60" y="76" textAnchor="middle" fontSize="11" fill="var(--seed-color-fg-neutral)">명 고갈 / 100</text>
+    </svg>
   );
 }
 
