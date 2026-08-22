@@ -119,10 +119,14 @@ export default function PortfolioView({ state, set }: { state: SimState; set: <K
                     {r.inst.status === "pending" && <span className="status-badge pending" style={{ marginLeft: 4 }}>검증중</span>}
                   </td>
                   <td>
-                    <div style={{ width: 90 }}>
-                      <TextFieldInput type="number" inputMode="numeric" value={r.qty}
-                        onChange={(e: any) => update(r.inst.id, { qty: Number(e.target.value) || 0 })} />
-                    </div>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      aria-label={`${r.inst.name} 주수`}
+                      value={r.qty}
+                      onChange={(e: any) => update(r.inst.id, { qty: Number(e.target.value) || 0 })}
+                      style={{ width: 90, padding: "8px 10px", border: "1px solid var(--seed-color-stroke-neutralWeak, #d3d9e0)", borderRadius: 8, background: "var(--seed-color-bg-canvas-static, #fff)", color: "inherit", font: "inherit", fontVariantNumeric: "tabular-nums" }}
+                    />
                   </td>
                   <td>
                     <SelectRoot label="" value={[r.account]} onValueChange={(v: any) => update(r.inst.id, { account: v[0] })}>

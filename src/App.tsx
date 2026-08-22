@@ -12,6 +12,27 @@ import RulesView from "./views/Rules";
 import GoldenView from "./views/Golden";
 import AboutView from "./views/About";
 
+import React from "react";
+
+/* 탭별 에러 바운더리 — 한 탭의 크래시가 전체 앱을 백지로 만들지 않는다 (방호막) */
+class TabBoundary extends React.Component<{ children: React.ReactNode }, { err: string | null }> {
+  constructor(props: any) { super(props); this.state = { err: null }; }
+  static getDerivedStateFromError(e: any) { return { err: String(e?.message ?? e) }; }
+  render() {
+    if (this.state.err) {
+      return (
+        <div className="card" style={{ borderColor: "#f85149" }}>
+          <div className="card-title">이 섹션을 표시하지 못했습니다</div>
+          <div style={{ fontSize: 13 }}>저장된 입력값 중 호환되지 않는 것이 있을 수 있어요. 아래 버튼으로 초기화할 수 있습니다 (다른 탭은 그대로 유지됩니다).</div>
+          <div className="row"><button className="chip" onClick={() => { try { localStorage.clear(); } catch {} location.reload(); }}>입력값 초기화하고 다시 열기</button></div>
+          <div className="card-note mono-note">{this.state.err}</div>
+        </div>
+      );
+    }
+    return this.props.children as any;
+  }
+}
+
 const TABS = [
   { v: "sim", label: "시뮬레이터" },
   { v: "pf", label: "포트폴리오" },
@@ -81,7 +102,7 @@ export default function App() {
             ))}
           </TabsList>
           <TabsContent value="sim" className="view-body"><SimView state={state} set={set} reset={reset} /></TabsContent>
-          <TabsContent value="pf" className="view-body"><PortfolioView state={state} set={set} /></TabsContent>
+          <TabsContent value="pf" className="view-body"><TabBoundary><PortfolioView state={state} set={set} /></TabBoundary></TabsContent>
           <TabsContent value="bt" className="view-body"><BTView /></TabsContent>
           <TabsContent value="band" className="view-body"><BandView state={state} /></TabsContent>
           <TabsContent value="rules" className="view-body"><RulesView /></TabsContent>
