@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Run law watch
+      - name: Run law watch (graceful skip without key)
         env:
           LAW_API_KEY: ${{ secrets.LAW_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -33,6 +33,10 @@ jobs:
 
       - name: Commit state if changed
         run: |
+          if [ ! -d data/law_watch ]; then
+            echo "상태 디렉토리 없음 (키 미등록 우회 종료) — 커밋 생략"
+            exit 0
+          fi
           git config user.name "shimpyo-bot"
           git config user.email "bot@shimpyo.local"
           git add data/law_watch
