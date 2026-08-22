@@ -5,16 +5,17 @@ export interface SimState {
   spend: number; asset: number; birth: number; retire: number;
   np: number; npjoin: number; npsalary: number; npauto: boolean;
   dep: number; mix: number; strat: string; rate: string; infl: string; wdl: string; refl: string;
+  divnet: number; // 포트폴리오 탭에서 주입하는 세후 연 배당 (원)
 }
 
 export const DEFAULTS: SimState = {
   spend: 250, asset: 5, birth: 1990, retire: 45,
   np: 60, npjoin: 25, npsalary: 400, npauto: true,
-  dep: 1.5, mix: 60, strat: "fixed", rate: "0.04", infl: "hist", wdl: "interest", refl: "0.5",
+  dep: 1.5, mix: 60, strat: "fixed", rate: "0.04", infl: "hist", wdl: "interest", refl: "0.5", divnet: 0,
 };
 
 const LS_KEY = "shimpyo.v1";
-const NUM_KEYS = ["spend","asset","birth","retire","np","npjoin","npsalary","dep","mix"] as const;
+const NUM_KEYS = ["spend","asset","birth","retire","np","npjoin","npsalary","dep","mix","divnet"] as const;
 
 function coerceNum(v: string | null, d: number): number {
   const n = Number(v);

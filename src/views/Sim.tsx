@@ -246,6 +246,24 @@ export default function SimView({ state, set, reset }: Props) {
         </div>
       </div>
 
+      {/* ===== 내 배당 포트폴리오 (포트폴리오 탭 연동) ===== */}
+      {state.divnet > 0 && (
+        <div className="card" style={{ borderColor: "var(--brand)" }}>
+          <div className="card-title">
+            <span>💰 내 배당 포트폴리오</span>
+            <span className="mono-note">포트폴리오 탭에서 계산된 세후 연 {fmtW(state.divnet)}원</span>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 8, fontSize: 15, lineHeight: 1.7 }}>
+            월 평균 <b>{fmtW(state.divnet / 12)}원</b> 배당 수령 ·
+            {state.spend > 0 ? (
+              <> 월 지출({state.spend}만원)의 <b>{Math.min(100, ((state.divnet / 12) / (state.spend * 10000)) * 100).toFixed(0)}%</b>를 배당이 커버 · 나머지는 자산 인출</>
+            ) : ""}
+            <button onClick={() => (location.hash = "#pf")} style={{ border: "none", background: "none", color: "var(--brand)", cursor: "pointer", textDecoration: "underline", fontSize: "inherit", padding: 0 }}>[포트폴리오 편집]</button>
+          </div>
+          <div className="card-note">배당은 과거 실적 기준 · 변동될 수 있습니다. 계산 중복 방지를 위해 이 카드는 표시 전용입니다 (배당 자산은 위 '모은 돈'에 이미 포함된 것으로 보세요).</div>
+        </div>
+      )}
+
       {/* ===== ② 답 ===== */}
       <div className="card">
         <div className="card-title">
