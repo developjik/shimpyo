@@ -5,6 +5,7 @@ import { SnackbarProvider } from "seed-design/ui/snackbar";
 import { RULES } from "./lib/engine";
 import { useSimState, themeCycle } from "./store";
 import SimView from "./views/Sim";
+import PortfolioView from "./views/Portfolio";
 import BTView from "./views/BT";
 import BandView from "./views/Band";
 import RulesView from "./views/Rules";
@@ -13,6 +14,7 @@ import AboutView from "./views/About";
 
 const TABS = [
   { v: "sim", label: "시뮬레이터" },
+  { v: "pf", label: "포트폴리오" },
   { v: "bt", label: "백테스트" },
   { v: "band", label: "또래 밴드" },
   { v: "rules", label: "근거·출처" },
@@ -79,6 +81,7 @@ export default function App() {
             ))}
           </TabsList>
           <TabsContent value="sim" className="view-body"><SimView state={state} set={set} reset={reset} /></TabsContent>
+          <TabsContent value="pf" className="view-body"><PortfolioView state={state} set={set} /></TabsContent>
           <TabsContent value="bt" className="view-body"><BTView /></TabsContent>
           <TabsContent value="band" className="view-body"><BandView state={state} /></TabsContent>
           <TabsContent value="rules" className="view-body"><RulesView /></TabsContent>

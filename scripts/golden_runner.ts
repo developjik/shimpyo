@@ -5,8 +5,9 @@
  */
 import { runGolden, RULES, DATA } from "../src/lib/engine.ts";
 import { runGoldenMC } from "../src/lib/mc.ts";
+import { runGoldenDiv } from "../src/lib/dividend.ts";
 
-const cases = [...(runGolden() as any[]), ...(runGoldenMC() as any[])];
+const cases = [...(runGolden() as any[]), ...(runGoldenMC() as any[]), ...(runGoldenDiv() as any[])];
 let fail = 0, pass = 0, defer = 0;
 for (const c of cases) {
   if (c.deferred) { defer++; console.log(`  DEFER  ${c.id} ${c.title}`); continue; }
